@@ -1,34 +1,48 @@
 pragma solidity ^0.4.19;
 
-contract ZombieFactory {
+import "./zombiefactory.sol";
 
-    event NewZombie(uint zombieId, string name, uint dna);
+contract KittyInterface {
+    function getKitty(uint256 _id)
+        external
+        view
+        returns (
+            bool isGestating,
+            bool isReady,
+            uint256 cooldownIndex,
+            uint256 nextActionAt,
+            uint256 siringWithId,
+            uint256 birthTime,
+            uint256 matronId,
+            uint256 sireId,
+            uint256 generation,
+            uint256 genes
+        );
+}
 
-    uint dnaDigits = 16;
-    uint dnaModulus = 10 ** dnaDigits;
+contract ZombieFeeding is ZombieFactory {
+    address ckAddress = 0x06012c8cf97BEaD5deAe237070F9587f8E7A266d;
 
-    struct Zombie {
-        string name;
-        uint dna;
+    KittyInterface kittyContract = KittyInterface(ckAddress);
+
+    function feedAndMultiply(
+        uint _zombieId,
+        uint _targetDna,
+        string _species
+    ) public {
+        require(msg.sender == zombieToOwner[_zombieId]);
+        Zombie storage myZombie = zombies[_zombieId];
+        _targetDna = _targetDna % dnaModulus;
+        uint newDna = (myZombie.dna + _targetDna) / 2;
+        if (keccak256(_species) == keccak256("kitty")) {
+            newDna = newDna - (newDna % 100) + 99;
+        }
+        _createZombie("NoName", newDna);
     }
 
-    Zombie[] public zombies;
-
-    // déclarez les mappages ici
-
-    function _createZombie(string _name, uint _dna) private {
-        uint id = zombies.push(Zombie(_name, _dna)) - 1;
-        NewZombie(id, _name, _dna);
+    function feedOnKitty(uint _zombieId, uint _kittyId) public {
+        uint kittyDna;
+        (, , , , , , , , , kittyDna) = kittyContract.getKitty(_kittyId);
+        feedAndMultiply(_zombieId, kittyDna, "kitty");
     }
-
-    function _generateRandomDna(string _str) private view returns (uint) {
-        uint rand = uint(keccak256(_str));
-        return rand % dnaModulus;
-    }
-
-    function createRandomZombie(string _name) public {
-        uint randDna = _generateRandomDna(_name);
-        _createZombie(_name, randDna);
-    }
-
 }
