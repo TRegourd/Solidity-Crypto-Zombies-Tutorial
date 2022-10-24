@@ -18,20 +18,18 @@ contract ZombieHelper is ZombieFeeding {
         levelUpFee = _fee;
     }
 
-    // 1. Modifiez cette fonction pour utiliser `ownerOf` :
     function changeName(uint _zombieId, string _newName)
         external
         aboveLevel(2, _zombieId)
-        ownerOf(_zombieId)
+        onlyOwnerOf(_zombieId)
     {
         zombies[_zombieId].name = _newName;
     }
 
-    // 2. Faites la même chose avec cette fonction :
     function changeDna(uint _zombieId, uint _newDna)
         external
         aboveLevel(20, _zombieId)
-        ownerOf(_zombieId)
+        onlyOwnerOf(_zombieId)
     {
         zombies[_zombieId].dna = _newDna;
     }
